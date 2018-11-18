@@ -1,0 +1,683 @@
+[
+    {
+        "id": "e004f6e1.82c15",
+        "type": "subflow",
+        "name": "Auth subflow",
+        "info": "",
+        "in": [
+            {
+                "x": 51,
+                "y": 96,
+                "wires": [
+                    {
+                        "id": "8cd1e621.401ec8"
+                    }
+                ]
+            }
+        ],
+        "out": [
+            {
+                "x": 537,
+                "y": 49,
+                "wires": [
+                    {
+                        "id": "f059d187.53036",
+                        "port": 0
+                    }
+                ]
+            }
+        ]
+    },
+    {
+        "id": "8cd1e621.401ec8",
+        "type": "idm-token",
+        "z": "e004f6e1.82c15",
+        "name": "",
+        "tokensource": "header",
+        "idm": "http://localhost:3000",
+        "userinfo": true,
+        "x": 193,
+        "y": 96,
+        "wires": [
+            [
+                "f059d187.53036"
+            ]
+        ]
+    },
+    {
+        "id": "f059d187.53036",
+        "type": "switch",
+        "z": "e004f6e1.82c15",
+        "name": "",
+        "property": "userInfo",
+        "propertyType": "msg",
+        "rules": [
+            {
+                "t": "nnull"
+            },
+            {
+                "t": "null"
+            }
+        ],
+        "checkall": "true",
+        "outputs": 2,
+        "x": 359,
+        "y": 97,
+        "wires": [
+            [],
+            [
+                "33378c0.6b6e6f4"
+            ]
+        ]
+    },
+    {
+        "id": "5325ef7e.46d6b8",
+        "type": "http response",
+        "z": "e004f6e1.82c15",
+        "name": "401 Response",
+        "x": 813.5,
+        "y": 129.25,
+        "wires": []
+    },
+    {
+        "id": "33378c0.6b6e6f4",
+        "type": "function",
+        "z": "e004f6e1.82c15",
+        "name": "Build Response",
+        "func": "msg.statusCode = 401;\nmsg.payload = \"Invalid token\";\nreturn msg;",
+        "outputs": 1,
+        "noerr": 0,
+        "x": 600,
+        "y": 129,
+        "wires": [
+            [
+                "5325ef7e.46d6b8"
+            ]
+        ]
+    },
+    {
+        "id": "53d0b535.c3ef94",
+        "type": "tab",
+        "label": "agile-iot-gateway-streaming-app"
+    },
+    {
+        "id": "ed1931b7.7c684",
+        "type": "http in",
+        "z": "53d0b535.c3ef94",
+        "name": "GET /device/:deviceId/component/:componentId/data",
+        "url": "/device/:deviceId/component/:componentId/data",
+        "method": "get",
+        "swaggerDoc": "",
+        "x": 224,
+        "y": 359.416748046875,
+        "wires": [
+            [
+                "b5efe934.465558"
+            ]
+        ]
+    },
+    {
+        "id": "8bc37673.133b98",
+        "type": "http response",
+        "z": "53d0b535.c3ef94",
+        "name": "Response",
+        "x": 1303.0555419921875,
+        "y": 440.416748046875,
+        "wires": []
+    },
+    {
+        "id": "b902e371.a48c18",
+        "type": "function",
+        "z": "53d0b535.c3ef94",
+        "name": "Build Response",
+        "func": "return msg;",
+        "outputs": 1,
+        "noerr": 0,
+        "x": 1136.0555419921875,
+        "y": 442.666748046875,
+        "wires": [
+            [
+                "8bc37673.133b98"
+            ]
+        ]
+    },
+    {
+        "id": "e51d290c.31b5",
+        "type": "influxdb in",
+        "z": "53d0b535.c3ef94",
+        "influxdb": "",
+        "name": "Perform query",
+        "query": "",
+        "x": 949.0555419921875,
+        "y": 442.666748046875,
+        "wires": [
+            [
+                "b902e371.a48c18"
+            ]
+        ]
+    },
+    {
+        "id": "4c6a6da.892d814",
+        "type": "function",
+        "z": "53d0b535.c3ef94",
+        "name": "Build query",
+        "func": "query = 'SELECT * FROM \"Temperature\" WHERE deviceId = \\'' +  msg.req.params.deviceId + '\\' AND componentId = \\'' + msg.req.params.componentId + '\\'';\n\nif (msg.req.query.time) {\n    query += ' AND time > now() - ' + msg.req.query.time;\n}\n\nmsg.query = query;\nreturn msg;",
+        "outputs": 1,
+        "noerr": 0,
+        "x": 730.0555419921875,
+        "y": 359.16668701171875,
+        "wires": [
+            [
+                "e51d290c.31b5"
+            ]
+        ]
+    },
+    {
+        "id": "a73ff9a5.bc34f",
+        "type": "http in",
+        "z": "53d0b535.c3ef94",
+        "name": "GET /device/:deviceId/component/:componentId/max",
+        "url": "/device/:deviceId/component/:componentId/max",
+        "method": "get",
+        "swaggerDoc": "",
+        "x": 224,
+        "y": 415.416748046875,
+        "wires": [
+            [
+                "6931fb40.273374"
+            ]
+        ]
+    },
+    {
+        "id": "5cc37b1.d03df84",
+        "type": "function",
+        "z": "53d0b535.c3ef94",
+        "name": "Build query",
+        "func": "query = 'SELECT max(\"value\") FROM \"Temperature\" WHERE deviceId = \\'' +  msg.req.params.deviceId + '\\' AND componentId = \\'' + msg.req.params.componentId + '\\'';\n\nif (msg.req.query.time) {\n    query += ' AND time > now() - ' + msg.req.query.time;\n}\n\nmsg.query = query;\nreturn msg;",
+        "outputs": 1,
+        "noerr": 0,
+        "x": 729.0555419921875,
+        "y": 416.41668701171875,
+        "wires": [
+            [
+                "e51d290c.31b5"
+            ]
+        ]
+    },
+    {
+        "id": "8dfaf099.593e58",
+        "type": "http in",
+        "z": "53d0b535.c3ef94",
+        "name": "GET /device/:deviceId/component/:componentId/min",
+        "url": "/device/:deviceId/component/:componentId/min",
+        "method": "get",
+        "swaggerDoc": "",
+        "x": 224,
+        "y": 476.666748046875,
+        "wires": [
+            [
+                "66e3d397.60b204"
+            ]
+        ]
+    },
+    {
+        "id": "ad83248d.6695c",
+        "type": "function",
+        "z": "53d0b535.c3ef94",
+        "name": "Build query",
+        "func": "query = 'SELECT min(\"value\") FROM \"Temperature\" WHERE deviceId = \\'' +  msg.req.params.deviceId + '\\' AND componentId = \\'' + msg.req.params.componentId + '\\'';\n\nif (msg.req.query.time) {\n    query += ' AND time > now() - ' + msg.req.query.time;\n}\n\nmsg.query = query;\nreturn msg;",
+        "outputs": 1,
+        "noerr": 0,
+        "x": 729.0555419921875,
+        "y": 475.91668701171875,
+        "wires": [
+            [
+                "e51d290c.31b5"
+            ]
+        ]
+    },
+    {
+        "id": "716028da.66fa78",
+        "type": "http in",
+        "z": "53d0b535.c3ef94",
+        "name": "GET /device/:deviceId/component/:componentId/average",
+        "url": "/device/:deviceId/component/:componentId/average",
+        "method": "get",
+        "swaggerDoc": "",
+        "x": 215,
+        "y": 528.666748046875,
+        "wires": [
+            [
+                "a0963363.4fa808"
+            ]
+        ]
+    },
+    {
+        "id": "88ead931.6fbee8",
+        "type": "function",
+        "z": "53d0b535.c3ef94",
+        "name": "Build query",
+        "func": "query = 'SELECT mean(\"value\") FROM \"Temperature\" WHERE deviceId = \\'' +  msg.req.params.deviceId + '\\' AND componentId = \\'' + msg.req.params.componentId + '\\'';\n\nif (msg.req.query.time) {\n    query += ' AND time > now() - ' + msg.req.query.time;\n}\n\nmsg.query = query;\nreturn msg;",
+        "outputs": 1,
+        "noerr": 0,
+        "x": 729.0555419921875,
+        "y": 528.9166870117188,
+        "wires": [
+            [
+                "6cb22cc.a295fd4"
+            ]
+        ]
+    },
+    {
+        "id": "ba1f4ae6.e2e77",
+        "type": "comment",
+        "z": "53d0b535.c3ef94",
+        "name": "API Data Endpoints",
+        "info": "API Data Endpoints",
+        "x": 332.5,
+        "y": 302.75,
+        "wires": []
+    },
+    {
+        "id": "c7ae5063.d6974",
+        "type": "comment",
+        "z": "53d0b535.c3ef94",
+        "name": "API Service Endpoints",
+        "info": "API ServiceEndpoints",
+        "x": 327,
+        "y": 59,
+        "wires": []
+    },
+    {
+        "id": "ac9eb36f.1ce7d",
+        "type": "http in",
+        "z": "53d0b535.c3ef94",
+        "name": "POST /device/start",
+        "url": "/device/start",
+        "method": "post",
+        "swaggerDoc": "",
+        "x": 336,
+        "y": 133.25,
+        "wires": [
+            [
+                "439b5bee.f98364"
+            ]
+        ]
+    },
+    {
+        "id": "7897214f.e8cbd8",
+        "type": "http in",
+        "z": "53d0b535.c3ef94",
+        "name": "POST /device/stop",
+        "url": "/device/stop",
+        "method": "post",
+        "swaggerDoc": "",
+        "x": 335,
+        "y": 233,
+        "wires": [
+            [
+                "6f34f84c.65cb48"
+            ]
+        ]
+    },
+    {
+        "id": "439b5bee.f98364",
+        "type": "subflow:e004f6e1.82c15",
+        "z": "53d0b535.c3ef94",
+        "x": 550.5,
+        "y": 133.25,
+        "wires": [
+            [
+                "2c66241e.69cff4"
+            ]
+        ]
+    },
+    {
+        "id": "b5efe934.465558",
+        "type": "subflow:e004f6e1.82c15",
+        "z": "53d0b535.c3ef94",
+        "x": 552,
+        "y": 360,
+        "wires": [
+            [
+                "4c6a6da.892d814"
+            ]
+        ]
+    },
+    {
+        "id": "6931fb40.273374",
+        "type": "subflow:e004f6e1.82c15",
+        "z": "53d0b535.c3ef94",
+        "x": 554,
+        "y": 416,
+        "wires": [
+            [
+                "5cc37b1.d03df84"
+            ]
+        ]
+    },
+    {
+        "id": "66e3d397.60b204",
+        "type": "subflow:e004f6e1.82c15",
+        "z": "53d0b535.c3ef94",
+        "x": 552,
+        "y": 477,
+        "wires": [
+            [
+                "ad83248d.6695c"
+            ]
+        ]
+    },
+    {
+        "id": "a0963363.4fa808",
+        "type": "subflow:e004f6e1.82c15",
+        "z": "53d0b535.c3ef94",
+        "x": 553,
+        "y": 529,
+        "wires": [
+            [
+                "88ead931.6fbee8"
+            ]
+        ]
+    },
+    {
+        "id": "6f34f84c.65cb48",
+        "type": "subflow:e004f6e1.82c15",
+        "z": "53d0b535.c3ef94",
+        "x": 550,
+        "y": 232,
+        "wires": [
+            [
+                "b2be46ee.25c32"
+            ]
+        ]
+    },
+    {
+        "id": "42b51bbd.530374",
+        "type": "influxdb out",
+        "z": "53d0b535.c3ef94",
+        "influxdb": "",
+        "name": "Database",
+        "measurement": "Temperature",
+        "x": 1296,
+        "y": 173,
+        "wires": []
+    },
+    {
+        "id": "2cc96d4c.74ff1a",
+        "type": "http response",
+        "z": "53d0b535.c3ef94",
+        "name": "Response",
+        "x": 1299,
+        "y": 252,
+        "wires": []
+    },
+    {
+        "id": "cd2a0340.286678",
+        "type": "function",
+        "z": "53d0b535.c3ef94",
+        "name": "Build Record",
+        "func": "record = {\n    deviceId: msg.payload.DeviceId,\n    componentId: msg.payload.ComponentId,\n    value: msg.payload.Value,\n    unit: msg.payload.Unit\n}\n\nmsg.payload = record;\nreturn msg;",
+        "outputs": 1,
+        "noerr": 0,
+        "x": 1116.5,
+        "y": 172.5,
+        "wires": [
+            [
+                "42b51bbd.530374"
+            ]
+        ]
+    },
+    {
+        "id": "9a266f40.e97cf",
+        "type": "switch",
+        "z": "53d0b535.c3ef94",
+        "name": "",
+        "property": "payload",
+        "propertyType": "msg",
+        "rules": [
+            {
+                "t": "eq",
+                "v": "There are missing configuration parameters",
+                "vt": "str"
+            },
+            {
+                "t": "eq",
+                "v": "The device is already on",
+                "vt": "str"
+            },
+            {
+                "t": "eq",
+                "v": "The device was started successfully",
+                "vt": "str"
+            },
+            {
+                "t": "else"
+            }
+        ],
+        "checkall": "true",
+        "outputs": 4,
+        "x": 894.5,
+        "y": 132.5,
+        "wires": [
+            [
+                "9e7919cc.66fcc8"
+            ],
+            [
+                "969ec2ef.7ab1f8"
+            ],
+            [
+                "3b5044df.d250b4"
+            ],
+            [
+                "cd2a0340.286678"
+            ]
+        ]
+    },
+    {
+        "id": "b2be46ee.25c32",
+        "type": "agile-device-stop",
+        "z": "53d0b535.c3ef94",
+        "server": "",
+        "name": "Stop Device",
+        "deviceId": "dummy001122334455",
+        "componentId": "DummyData",
+        "x": 730.5,
+        "y": 231.5,
+        "wires": [
+            [
+                "8ffab1cf.9b1e1"
+            ]
+        ]
+    },
+    {
+        "id": "969ec2ef.7ab1f8",
+        "type": "function",
+        "z": "53d0b535.c3ef94",
+        "name": "Already On",
+        "func": "msg.statusCode = 302;\nreturn msg;",
+        "outputs": 1,
+        "noerr": 0,
+        "x": 1115.5,
+        "y": 91,
+        "wires": [
+            [
+                "ac3d3947.9278c8"
+            ]
+        ]
+    },
+    {
+        "id": "3b5044df.d250b4",
+        "type": "function",
+        "z": "53d0b535.c3ef94",
+        "name": "Success",
+        "func": "msg.statusCode = 200;\nreturn msg;",
+        "outputs": 1,
+        "noerr": 0,
+        "x": 1126.5,
+        "y": 133,
+        "wires": [
+            [
+                "ac3d3947.9278c8"
+            ]
+        ]
+    },
+    {
+        "id": "ac3d3947.9278c8",
+        "type": "http response",
+        "z": "53d0b535.c3ef94",
+        "name": "Response",
+        "x": 1300.5,
+        "y": 90.75,
+        "wires": []
+    },
+    {
+        "id": "9e7919cc.66fcc8",
+        "type": "function",
+        "z": "53d0b535.c3ef94",
+        "name": "Configuration Error",
+        "func": "msg.statusCode = 400;\nreturn msg;",
+        "outputs": 1,
+        "noerr": 0,
+        "x": 1096.5,
+        "y": 51,
+        "wires": [
+            [
+                "ac3d3947.9278c8"
+            ]
+        ]
+    },
+    {
+        "id": "8ffab1cf.9b1e1",
+        "type": "switch",
+        "z": "53d0b535.c3ef94",
+        "name": "",
+        "property": "payload",
+        "propertyType": "msg",
+        "rules": [
+            {
+                "t": "eq",
+                "v": "The device does not exist",
+                "vt": "str"
+            },
+            {
+                "t": "eq",
+                "v": "There are missing configuration parameters",
+                "vt": "str"
+            },
+            {
+                "t": "else"
+            }
+        ],
+        "checkall": "true",
+        "outputs": 3,
+        "x": 894.5,
+        "y": 232,
+        "wires": [
+            [
+                "ddd550e.30ad43"
+            ],
+            [
+                "b3e1ac73.f5f108"
+            ],
+            [
+                "30202e32.f6a042"
+            ]
+        ]
+    },
+    {
+        "id": "ddd550e.30ad43",
+        "type": "function",
+        "z": "53d0b535.c3ef94",
+        "name": "Not Found",
+        "func": "msg.statusCode = 404;\nnode.warn(msg);\nreturn msg;",
+        "outputs": 1,
+        "noerr": 0,
+        "x": 1114.5,
+        "y": 217,
+        "wires": [
+            [
+                "2cc96d4c.74ff1a"
+            ]
+        ]
+    },
+    {
+        "id": "b3e1ac73.f5f108",
+        "type": "function",
+        "z": "53d0b535.c3ef94",
+        "name": "Configuration Error",
+        "func": "msg.statusCode = 400;\nreturn msg;",
+        "outputs": 1,
+        "noerr": 0,
+        "x": 1094.5,
+        "y": 254,
+        "wires": [
+            [
+                "2cc96d4c.74ff1a"
+            ]
+        ]
+    },
+    {
+        "id": "30202e32.f6a042",
+        "type": "function",
+        "z": "53d0b535.c3ef94",
+        "name": "Success",
+        "func": "msg.statusCode = 200;\nreturn msg;",
+        "outputs": 1,
+        "noerr": 0,
+        "x": 1123.5,
+        "y": 293,
+        "wires": [
+            [
+                "2cc96d4c.74ff1a"
+            ]
+        ]
+    },
+    {
+        "id": "6cb22cc.a295fd4",
+        "type": "influxdb in",
+        "z": "53d0b535.c3ef94",
+        "influxdb": "",
+        "name": "Perform query",
+        "query": "",
+        "x": 951,
+        "y": 527,
+        "wires": [
+            [
+                "acb4c7b3.bcabd"
+            ]
+        ]
+    },
+    {
+        "id": "acb4c7b3.bcabd",
+        "type": "function",
+        "z": "53d0b535.c3ef94",
+        "name": "Build Response",
+        "func": "\nif (msg.payload.length > 0) {\n    msg.payload = {\n        average: msg.payload[0].mean\n    }\n} else {\n    msg.payload = {}\n}\n\nreturn msg;",
+        "outputs": 1,
+        "noerr": 0,
+        "x": 1135.5,
+        "y": 527,
+        "wires": [
+            [
+                "8bc37673.133b98"
+            ]
+        ]
+    },
+    {
+        "id": "2c66241e.69cff4",
+        "type": "agile-device-start",
+        "z": "53d0b535.c3ef94",
+        "server": "",
+        "name": "Start Device",
+        "deviceId": "dummy001122334455",
+        "componentId": "DummyData",
+        "x": 730.5,
+        "y": 132.5,
+        "wires": [
+            [
+                "9a266f40.e97cf"
+            ]
+        ]
+    }
+]
